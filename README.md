@@ -1,2 +1,2 @@
-# Calcolo-amplificatore-
+# Calcolo-amplificatore
 Calcolo amplificatore antenna tv
