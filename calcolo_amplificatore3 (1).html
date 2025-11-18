@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcolatore Segnale TV</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f3f4f6; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 24px; margin-bottom: 24px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        h1 { color: #1f2937; font-size: 24px; }
+        h2 { color: #374151; font-size: 18px; margin-bottom: 16px; }
+        h3 { color: #1d4ed8; font-size: 16px; margin-bottom: 16px; }
+        .grid { display: grid; gap: 16px; }
+        .grid-3 { grid-template-columns: repeat(3, 1fr); }
+        .grid-2 { grid-template-columns: repeat(2, 1fr); }
+        @media (max-width: 768px) { .grid-3, .grid-2 { grid-template-columns: 1fr; } }
+        .input-group { margin-bottom: 12px; }
+        label { display: block; font-size: 14px; color: #4b5563; margin-bottom: 4px; font-weight: 500; }
+        input { width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; }
+        input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        button { background: #2563eb; color: white; padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+        button:hover { background: #1d4ed8; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 16px; }
+        th, td { border: 1px solid #d1d5db; padding: 8px 12px; text-align: left; }
+        th { background: #f3f4f6; font-weight: 600; }
+        .red-text { color: #dc2626; }
+        .prese-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; background: #eff6ff; padding: 16px; border-radius: 6px; }
+        .presa-card { padding: 12px; border-radius: 6px; border: 2px solid; }
+        .presa-valid { background: #dcfce7; border-color: #86efac; }
+        .presa-invalid { background: #fee2e2; border-color: #fca5a5; }
+        .presa-title { font-weight: 600; color: #1d4ed8; margin-bottom: 4px; }
+        .presa-value { font-size: 24px; font-weight: bold; margin-bottom: 4px; }
+        .value-valid { color: #15803d; }
+        .value-invalid { color: #dc2626; }
+        .presa-cascata { font-size: 12px; color: #6b7280; }
+        .separator { border-bottom: 1px solid #e5e7eb; margin: 24px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <h1>Calcolatore Segnale TV</h1>
+                <button onclick="exportToCSV()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                    </svg>
+                    Esporta CSV
+                </button>
+            </div>
+
+            <div class="grid grid-3">
+                <div>
+                    <h2>Parametri Segnale</h2>
+                    <div class="input-group">
+                        <label>Segnale Monte Faito (dB)</label>
+                        <input type="text" id="segnaleMonteFaito" value="36" onchange="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>Guadagno Antenna (dB)</label>
+                        <input type="text" id="guadagnoAntenna" value="40" onchange="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>Guadagno Amplificatore (dB)</label>
+                        <input type="text" id="guadagnoAmplificatore" value="39" onchange="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>Perdita Interna Amp. (dB)</label>
+                        <input type="text" id="perditaInternaAmp" value="1.5" onchange="calculate()">
+                    </div>
+                </div>
+
+                <div>
+                    <h2>Cavi e Distanze</h2>
+                    <div class="input-group">
+                        <label>Cavo Antenna-Amp. (m)</label>
+                        <input type="text" id="lungoCavo1" value="5" onchange="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>Cavo Amp.-1° Deriv. (m)</label>
+                        <input type="text" id="lungoCavo2" value="5" onchange="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>Cavo Deriv.-Prima Presa Piano 4 (m)</label>
+                        <input type="text" id="lungoCavoPresa1" value="5" onchange="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>Cavo Deriv.-Prima Presa Piano 3 (m)</label>
+                        <input type="text" id="lungoCavoPresa2" value="5" onchange="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>Cavo Deriv.-Prima Presa Piano 2 (m)</label>
+                        <input type="text" id="lungoCavoPresa3" value="5" onchange="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>Cavo Deriv.-Prima Presa Piano 1 (m)</label>
+                        <input type="text" id="lungoCavoPresa4" value="5" onchange="calculate()">
+                    </div>
+                </div>
+
+                <div>
+                    <h2>Distanze e Perdite</h2>
+                    <div class="input-group">
+                        <label>Distanza tra Prese (m)</label>
+                        <input type="text" id="distanzaMediaPrese" value="10" onchange="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>Distanza tra Piani - verticale (m)</label>
+                        <input type="text" id="distanzaPiani" value="3" onchange="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>Perdita Cavo (dB/m)</label>
+                        <input type="text" id="perditaCavoMetro" value="0.186" onchange="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>Nr. Prese/Appart.</label>
+                        <input type="number" id="nrPreseAppart" value="3" onchange="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>Nr. Piani</label>
+                        <input type="number" id="nrPiani" value="4" onchange="calculate()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-2" style="margin-top: 16px;">
+                <div>
+                    <h2>Perdite Derivatori</h2>
+                    <div class="grid grid-2">
+                        <div class="input-group">
+                            <label>Perdita Deriv. 1 (dB)</label>
+                            <input type="text" id="perditaDeriv1" value="24" onchange="calculate()">
+                        </div>
+                        <div class="input-group">
+                            <label>Perdita Deriv. 2 (dB)</label>
+                            <input type="text" id="perditaDeriv2" value="18" onchange="calculate()">
+                        </div>
+                        <div class="input-group">
+                            <label>Perdita Deriv. 3 (dB)</label>
+                            <input type="text" id="perditaDeriv3" value="14" onchange="calculate()">
+                        </div>
+                        <div class="input-group">
+                            <label>Perdita Deriv. 4 (dB)</label>
+                            <input type="text" id="perditaDeriv4" value="10" onchange="calculate()">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h2>Perdite Prese</h2>
+                    <div class="input-group">
+                        <label>Perdita Presa Passante Uscita (dB)</label>
+                        <input type="text" id="perditaPresaPassante" value="10" onchange="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>Perdita Presa Passante Derivata (dB)</label>
+                        <input type="text" id="perditaPresaDerivata" value="2" onchange="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>Perdita Passaggio Derivatore (dB)</label>
+                        <input type="text" id="perditaPassaggioDeriv" value="4" onchange="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>Livello Minimo Presa (dB)</label>
+                        <input type="text" id="livelloMinPresa" value="65" onchange="calculate()">
+                    </div>
+                    <div class="input-group">
+                        <label>Livello Massimo Presa (dB)</label>
+                        <input type="text" id="livelloMaxPresa" value="80" onchange="calculate()">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Risultati Calcoli</h2>
+            <div id="results"></div>
+        </div>
+    </div>
+
+    <script>
+        function getInput(id) {
+            return parseFloat(document.getElementById(id).value.replace(',', '.')) || 0;
+        }
+
+        function formatNumber(num) {
+            return num.toFixed(2).replace('.', ',');
+        }
+
+        function calculate() {
+            const inputs = {
+                segnaleMonteFaito: getInput('segnaleMonteFaito'),
+                guadagnoAntenna: getInput('guadagnoAntenna'),
+                guadagnoAmplificatore: getInput('guadagnoAmplificatore'),
+                perditaInternaAmp: getInput('perditaInternaAmp'),
+                lungoCavo1: getInput('lungoCavo1'),
+                lungoCavo2: getInput('lungoCavo2'),
+                lungoCavoPresa1: getInput('lungoCavoPresa1'),
+                lungoCavoPresa2: getInput('lungoCavoPresa2'),
+                lungoCavoPresa3: getInput('lungoCavoPresa3'),
+                lungoCavoPresa4: getInput('lungoCavoPresa4'),
+                nrPreseAppart: getInput('nrPreseAppart'),
+                distanzaMediaPrese: getInput('distanzaMediaPrese'),
+                nrPiani: getInput('nrPiani'),
+                distanzaPiani: getInput('distanzaPiani'),
+                perditaDeriv1: getInput('perditaDeriv1'),
+                perditaDeriv2: getInput('perditaDeriv2'),
+                perditaDeriv3: getInput('perditaDeriv3'),
+                perditaDeriv4: getInput('perditaDeriv4'),
+                perditaPresaPassante: getInput('perditaPresaPassante'),
+                perditaPresaDerivata: getInput('perditaPresaDerivata'),
+                perditaPassaggioDeriv: getInput('perditaPassaggioDeriv'),
+                perditaCavoMetro: getInput('perditaCavoMetro'),
+                livelloMinPresa: getInput('livelloMinPresa'),
+                livelloMaxPresa: getInput('livelloMaxPresa')
+            };
+
+            const risultati = [];
+            const segnaleUscitaAmp = inputs.segnaleMonteFaito + inputs.guadagnoAntenna - 
+                                     (inputs.lungoCavo1 * inputs.perditaCavoMetro) + 
+                                     inputs.guadagnoAmplificatore - inputs.perditaInternaAmp;
+            
+            let segnaleVerticale = segnaleUscitaAmp;
+            
+            const perditeDerivatori = [inputs.perditaDeriv1, inputs.perditaDeriv2, inputs.perditaDeriv3, inputs.perditaDeriv4];
+            const lunghezzeCaviPrese = [inputs.lungoCavoPresa1, inputs.lungoCavoPresa2, inputs.lungoCavoPresa3, inputs.lungoCavoPresa4];
+            
+            for (let piano = 0; piano < inputs.nrPiani; piano++) {
+                const perditaCavoVerticale = piano === 0 ? 
+                    inputs.lungoCavo2 * inputs.perditaCavoMetro :
+                    inputs.distanzaPiani * inputs.perditaCavoMetro;
+                
+                const segnalePrimaDeriv = segnaleVerticale - perditaCavoVerticale;
+                const perditaDerivazione = perditeDerivatori[piano];
+                const segnaleDopoDerivazione = segnalePrimaDeriv - perditaDerivazione;
+                const perditaCavoOrizzontale = lunghezzeCaviPrese[piano] * inputs.perditaCavoMetro;
+                const segnalePrimaPresa = segnaleDopoDerivazione - perditaCavoOrizzontale;
+                
+                const preseAppart = [];
+                let segnaleCascata = segnalePrimaPresa;
+                
+                for (let presa = 0; presa < inputs.nrPreseAppart; presa++) {
+                    if (presa > 0) {
+                        const perditaCavo = inputs.distanzaMediaPrese * inputs.perditaCavoMetro;
+                        segnaleCascata = segnaleCascata - inputs.perditaPresaDerivata - perditaCavo;
+                    }
+                    
+                    const segnaleAllaPresa = segnaleCascata - inputs.perditaPresaPassante;
+                    const isValido = segnaleAllaPresa >= inputs.livelloMinPresa && segnaleAllaPresa <= inputs.livelloMaxPresa;
+                    
+                    preseAppart.push({
+                        numeroPresa: presa + 1,
+                        segnaleCascata: formatNumber(segnaleCascata),
+                        segnaleAllaPresa: formatNumber(segnaleAllaPresa),
+                        isValido: isValido
+                    });
+                }
+                
+                risultati.push({
+                    piano: inputs.nrPiani - piano,
+                    segnaleUscitaAmp: formatNumber(segnaleUscitaAmp),
+                    perditaCavoVerticale: formatNumber(perditaCavoVerticale),
+                    segnalePrimaDeriv: formatNumber(segnalePrimaDeriv),
+                    perditaDerivazione: formatNumber(perditaDerivazione),
+                    segnaleDopoDerivazione: formatNumber(segnaleDopoDerivazione),
+                    perditaCavoOrizzontale: formatNumber(perditaCavoOrizzontale),
+                    segnalePrimaPresa: formatNumber(segnalePrimaPresa),
+                    prese: preseAppart
+                });
+                
+                segnaleVerticale = segnalePrimaDeriv - inputs.perditaPassaggioDeriv;
+            }
+
+            displayResults(risultati);
+            window.currentResults = risultati;
+            window.currentInputs = inputs;
+        }
+
+        function displayResults(risultati) {
+            let html = '';
+            
+            risultati.forEach((ris, idx) => {
+                html += `
+                    <div style="margin-bottom: 32px;">
+                        <h3>APPARTAMENTO PIANO ${ris.piano}</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Uscita Amp.</th>
+                                    <th>Perd. Cavo Vert.</th>
+                                    <th>Prima Deriv.</th>
+                                    <th>Perd. Deriv.</th>
+                                    <th>Dopo Deriv.</th>
+                                    <th>Perd. Cavo Oriz.</th>
+                                    <th>Prima Presa</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>${ris.segnaleUscitaAmp} dB</strong></td>
+                                    <td class="red-text">-${ris.perditaCavoVerticale} dB</td>
+                                    <td><strong>${ris.segnalePrimaDeriv} dB</strong></td>
+                                    <td class="red-text">-${ris.perditaDerivazione} dB</td>
+                                    <td><strong>${ris.segnaleDopoDerivazione} dB</strong></td>
+                                    <td class="red-text">-${ris.perditaCavoOrizzontale} dB</td>
+                                    <td><strong>${ris.segnalePrimaPresa} dB</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <h3 style="margin-top: 16px; color: #1e40af;">SEGNALE ALLE PRESE TV</h3>
+                        <div class="prese-grid">
+                `;
+                
+                ris.prese.forEach(presa => {
+                    html += `
+                        <div class="presa-card ${presa.isValido ? 'presa-valid' : 'presa-invalid'}">
+                            <div class="presa-title">Presa ${presa.numeroPresa}</div>
+                            <div class="presa-value ${presa.isValido ? 'value-valid' : 'value-invalid'}">${presa.segnaleAllaPresa} dB</div>
+                            <div class="presa-cascata">Cascata: ${presa.segnaleCascata} dB</div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div></div>';
+                if (idx < risultati.length - 1) html += '<div class="separator"></div>';
+            });
+            
+            document.getElementById('results').innerHTML = html;
+        }
+
+        function exportToCSV() {
+            if (!window.currentResults || !window.currentInputs) {
+                alert('Calcolare prima i risultati');
+                return;
+            }
+
+            const inputs = window.currentInputs;
+            const risultati = window.currentResults;
+            
+            let csv = "FOGLIO INPUT\n\n";
+            csv += "Parametro,Valore,Unità\n";
+            csv += `Segnale Monte Faito,${formatNumber(inputs.segnaleMonteFaito)},dB\n`;
+            csv += `Guadagno Antenna,${formatNumber(inputs.guadagnoAntenna)},dB\n`;
+            csv += `Guadagno Amplificatore,${formatNumber(inputs.guadagnoAmplificatore)},dB\n`;
+            csv += `Perdita Interna Amplificatore,${formatNumber(inputs.perditaInternaAmp)},dB\n`;
+            csv += `Lunghezza Cavo 1 (Antenna-Amplificatore),${formatNumber(inputs.lungoCavo1)},m\n`;
+            csv += `Lunghezza Cavo 2 (Amplificatore-Primo Derivatore),${formatNumber(inputs.lungoCavo2)},m\n`;
+            csv += `Lunghezza Cavo Derivatore-Prima Presa Piano 4,${formatNumber(inputs.lungoCavoPresa1)},m\n`;
+            csv += `Lunghezza Cavo Derivatore-Prima Presa Piano 3,${formatNumber(inputs.lungoCavoPresa2)},m\n`;
+            csv += `Lunghezza Cavo Derivatore-Prima Presa Piano 2,${formatNumber(inputs.lungoCavoPresa3)},m\n`;
+            csv += `Lunghezza Cavo Derivatore-Prima Presa Piano 1,${formatNumber(inputs.lungoCavoPresa4)},m\n`;
+            csv += `Nr. Prese per Appartamento,${inputs.nrPreseAppart},-\n`;
+            csv += `Distanza Media tra Prese,${formatNumber(inputs.distanzaMediaPrese)},m\n`;
+            csv += `Nr. Piani,${inputs.nrPiani},-\n`;
+            csv += `Distanza tra Piani (cavo verticale),${formatNumber(inputs.distanzaPiani)},m\n`;
+            csv += `Perdita Primo Derivatore,${formatNumber(inputs.perditaDeriv1)},dB\n`;
+            csv += `Perdita Secondo Derivatore,${formatNumber(inputs.perditaDeriv2)},dB\n`;
+            csv += `Perdita Terzo Derivatore,${formatNumber(inputs.perditaDeriv3)},dB\n`;
+            csv += `Perdita Quarto Derivatore,${formatNumber(inputs.perditaDeriv4)},dB\n`;
+            csv += `Perdita Presa Passante (Uscita),${formatNumber(inputs.perditaPresaPassante)},dB\n`;
+            csv += `Perdita Presa Passante (Derivata),${formatNumber(inputs.perditaPresaDerivata)},dB\n`;
+            csv += `Perdita Passaggio Derivatore,${formatNumber(inputs.perditaPassaggioDeriv)},dB\n`;
+            csv += `Perdita Cavo per Metro,${formatNumber(inputs.perditaCavoMetro)},dB/m\n`;
+            csv += `Livello Minimo Presa,${formatNumber(inputs.livelloMinPresa)},dB\n`;
+            csv += `Livello Massimo Presa,${formatNumber(inputs.livelloMaxPresa)},dB\n`;
+            
+            csv += "\n\nFOGLIO CALCOLI\n\n";
+            
+            risultati.forEach(risultato => {
+                csv += `\nPIANO ${risultato.piano}\n`;
+                csv += "Parametro,Valore (dB)\n";
+                csv += `Segnale Uscita Amplificatore,${risultato.segnaleUscitaAmp}\n`;
+                csv += `Perdita Cavo Verticale,${risultato.perditaCavoVerticale}\n`;
+                csv += `Segnale Prima Derivatore,${risultato.segnalePrimaDeriv}\n`;
+                csv += `Perdita Derivazione,${risultato.perditaDerivazione}\n`;
+                csv += `Segnale Dopo Derivazione,${risultato.segnaleDopoDerivazione}\n`;
+                csv += `Perdita Cavo Orizzontale,${risultato.perditaCavoOrizzontale}\n`;
+                csv += `Segnale Prima Presa (cascata),${risultato.segnalePrimaPresa}\n`;
+                
+                csv += "\nSEGNALE ALLE PRESE\n";
+                csv += "Presa,Segnale Cascata (dB),Segnale alla Presa (dB)\n";
+                risultato.prese.forEach(presa => {
+                    csv += `Presa ${presa.numeroPresa},${presa.segnaleCascata},${presa.segnaleAllaPresa}\n`;
+                });
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'calcolo_segnale_tv.csv';
+            link.click();
+        }
+
+        // Calcola al caricamento della pagina
+        window.onload = calculate;
+    </script>
+</body>
+</html>
